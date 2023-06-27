@@ -36,6 +36,20 @@ export let spacePressed = false;
 
 export let escapePressed = false;
 
+// numbers
+export let onePressed = false;
+export let twoPressed = false;
+export let threePressed = false;
+export let fourPressed = false;
+export let fivePressed = false;
+export let sixPressed = false;
+export let sevenPressed = false;
+export let eightPressed = false;
+export let ninePressed = false;
+export let zeroPressed = false;
+// delete
+export let deletePressed = false;
+
 // Functions
 export function keyDownHandler(event) {
     // A pressed
@@ -59,6 +73,43 @@ export function keyDownHandler(event) {
     // Escape
     if (event.keyCode === 27) {
         escapePressed = true;
+    }
+
+    // 1 through 9
+    if (event.keyCode === 49) {
+        onePressed = true;
+    }
+    if (event.keyCode === 50) {
+        twoPressed = true;
+    }
+    if (event.keyCode === 51) {
+        threePressed = true;
+    }
+    if (event.keyCode === 52) {
+        fourPressed = true;
+    }
+    if (event.keyCode === 53) {
+        fivePressed = true;
+    }
+    if (event.keyCode === 54) {
+        sixPressed = true;
+    }
+    if (event.keyCode === 55) {
+        sevenPressed = true;
+    }
+    if (event.keyCode === 56) {
+        eightPressed = true;
+    }
+    if (event.keyCode === 57) {
+        ninePressed = true;
+    }
+    if (event.keyCode === 48) {
+        zeroPressed = true;
+    }
+
+    //delete
+    if (event.keyCode === 8) {
+        deletePressed = true;
     }
 }
 
@@ -84,6 +135,43 @@ export function keyUpHandler(event) {
     // Escape
     if (event.keyCode === 27) {
         escapePressed = false;
+    }
+
+    // 1 through 9
+    if (event.keyCode === 49) {
+        onePressed = false;
+    }
+    if (event.keyCode === 50) {
+        twoPressed = false;
+    }
+    if (event.keyCode === 51) {
+        threePressed = false;
+    }
+    if (event.keyCode === 52) {
+        fourPressed = false;
+    }
+    if (event.keyCode === 53) {
+        fivePressed = false;
+    }
+    if (event.keyCode === 54) {
+        sixPressed = false;
+    }
+    if (event.keyCode === 55) {
+        sevenPressed = false;
+    }
+    if (event.keyCode === 56) {
+        eightPressed = false;
+    }
+    if (event.keyCode === 57) {
+        ninePressed = false;
+    }
+    if (event.keyCode === 48) {
+        zeroPressed = false;
+    }
+
+    // delete
+    if (event.keyCode === 8) {
+        deletePressed = false;
     }
 }
 

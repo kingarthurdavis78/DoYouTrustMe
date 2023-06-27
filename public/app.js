@@ -14,17 +14,27 @@ otherPlayer.setPosition(width * 0.75, height * 0.9);
 stage.addChild(player.rect);
 stage.addChild(otherPlayer.rect);
 
-// walls
-let walls = [];
-walls.push(new Wall(width / 2 - width * 0.005, 0, width * 0.01, height, darkGray));
-// draw walls
-for (let i = 0; i < walls.length; i++) {
-    stage.addChild(walls[i].rect);
-    walls[i].draw();
+// Add the middle wall
+let middle = new Wall(width / 2 - width * 0.005, 0, width * 0.01, height, darkGray);
+stage.addChild(middle.rect);
+middle.draw();
+
+// load json map
+let map = loadMap("maps/map.json");
+
+async function loadMap(filename) {
+    // load text from file
+    let text = await fetch(filename);
+    // parse text to json
+    let map = await JSON.parse(await text.text());
+
+    console.log(map);
+    return map;
 }
 
+
 // ws is the webSocket connection
-const ws = new WebSocket('ws://192.168.86.22:3000');
+const ws = new WebSocket('ws://192.168.253.163:3000');
 ws.onmessage = async (event) => {
     if (event.data === 'Sorry, the server is full') {
         alert('Sorry, the server is full');
@@ -86,14 +96,14 @@ function updatePlayer() {
 
     // check if touching the edge of the screen
     checkEdges();
-    checkWalls();
+    // checkWalls();
 
     player.move();
     player.draw();
 
 
     // send the player data to the server
-    if (player.velocity.dx !== prevVelocity.dx || player.velocity.dy !== prevVelocity.dy && ws.readyState === 1) {
+    if ((player.velocity.dx !== prevVelocity.dx || player.velocity.dy !== prevVelocity.dy) && ws.readyState === 1) {
         ws.send(JSON.stringify({x: player.position.x, y: player.position.y, dx: player.velocity.dx, dy: player.velocity.dy}));
     }
 }
@@ -114,11 +124,5 @@ function checkEdges() {
     if (player.position.y + player.velocity.dy + player.height > height) {
         player.position.y = height - player.height;
         player.velocity.dy = 0;
-    }
-}
-
-function checkWalls() {
-    for (let wall of walls) {
-
     }
 }
