@@ -5,10 +5,74 @@ import {rightPressed, leftPressed, upPressed, downPressed, spacePressed, app, st
 import {darkGray} from "./colors.js";
 
 // Initialize the players
-let player = new Player("Player 1", 0x66CCFF, 1, height * 0.1, height * 0.1, height * 0.01);
+let player = new Player("Adam", 0x66CCFF, 1, height * 0.05, height * 0.05, height * 0.01);
 player.setPosition(width * 0.25, height * 0.9);
-let otherPlayer = new Player("Player 2", 0xFF0000, 2, height * 0.1, height * 0.1, height * 0.01);
+let otherPlayer = new Player("Eve", 0xFF0000, 2, height * 0.05, height * 0.05, height * 0.01);
 otherPlayer.setPosition(width * 0.75, height * 0.9);
+
+// Load gif and add it to the stage
+const adam_walking_images = [
+    "assets/adam/adam-walking-1.png",
+    "assets/adam/adam-walking-2.png",
+    "assets/adam/adam-walking-3.png",
+    "assets/adam/adam-walking-4.png",
+    "assets/adam/adam-walking-5.png",
+    "assets/adam/adam-walking-6.png",
+    "assets/adam/adam-walking-7.png",
+    "assets/adam/adam-walking-8.png",
+];
+
+const eve_walking_images = [
+    "assets/eve/eve-walking-1.png",
+    "assets/eve/eve-walking-2.png",
+    "assets/eve/eve-walking-3.png",
+    "assets/eve/eve-walking-4.png",
+    "assets/eve/eve-walking-5.png",
+    "assets/eve/eve-walking-6.png",
+    "assets/eve/eve-walking-7.png",
+    "assets/eve/eve-walking-8.png",
+];
+
+// Load Adam's walking animation
+for (let i = 0; i < adam_walking_images.length; i++) {
+    app.loader.add(adam_walking_images[i]);
+}
+
+// Load Eve's walking animation
+for (let i = 0; i < eve_walking_images.length; i++) {
+    app.loader.add(eve_walking_images[i]);
+}
+
+app.loader.load((loader, resources) => {
+    let textureArray = [];
+    for (let i = 0; i < adam_walking_images.length; i++) {
+        let texture = resources[adam_walking_images[i]].texture;
+        textureArray.push(texture);
+    }
+    player.sprite = new PIXI.AnimatedSprite(textureArray);
+    player.sprite.anchor.set(0.5);
+    player.sprite.scale.set(0.5);
+    player.sprite.animationSpeed = 0.15;
+    player.sprite.play();
+    player.sprite.x = player.position.x;
+    player.sprite.y = player.position.y;
+    stage.addChild(player.sprite);
+
+    textureArray = [];
+    for (let i = 0; i < eve_walking_images.length; i++) {
+        let texture = resources[eve_walking_images[i]].texture;
+        textureArray.push(texture);
+    }
+    otherPlayer.sprite = new PIXI.AnimatedSprite(textureArray);
+    otherPlayer.sprite.anchor.set(0.5);
+    otherPlayer.sprite.scale.set(0.5);
+    otherPlayer.sprite.animationSpeed = 0.15;
+    otherPlayer.sprite.play();
+    otherPlayer.sprite.x = otherPlayer.position.x;
+    otherPlayer.sprite.y = otherPlayer.position.y;
+    stage.addChild(otherPlayer.sprite);
+});
+
 
 // Add the rectangles to the stage
 stage.addChild(player.rect);
@@ -36,9 +100,6 @@ ws.onmessage = async (event) => {
         otherPlayer.rect.visible = false;
         return;
     }
-    if (otherPlayer.rect.visible === false) {
-        otherPlayer.rect.visible = true;
-    }
     let message = JSON.parse(await event.data.text());
     otherPlayer.setPosition(message.x + width * 0.5, message.y);
     otherPlayer.setVelocity(message.dx, message.dy);
@@ -48,9 +109,29 @@ ws.onmessage = async (event) => {
 app.ticker.maxFPS = 30;
 app.ticker.add(() => {
     updatePlayer();
+    updateOtherPlayer();
+});
+
+function updateOtherPlayer() {
+    // flip sprite if necessary
+    if (otherPlayer.sprite !== null) {
+        if (otherPlayer.velocity.dx > 0) {
+            otherPlayer.sprite.scale.x = 0.5;
+        } else if (otherPlayer.velocity.dx < 0) {
+            otherPlayer.sprite.scale.x = -0.5;
+        }
+        // stop sprite if necessary
+        if (otherPlayer.velocity.dx === 0 && otherPlayer.velocity.dy === 0) {
+            otherPlayer.sprite.stop();
+        }
+        else {
+            otherPlayer.sprite.play();
+        }
+    }
+
     otherPlayer.move();
     otherPlayer.draw();
-});
+}
 
 
 function updatePlayer() {
@@ -86,7 +167,23 @@ function updatePlayer() {
 
     // check if touching the edge of the screen
     checkEdges();
-    checkWalls();
+    // checkWalls();
+
+    // flip the sprite if needed
+    if (player.velocity.dx > 0) {
+        player.sprite.scale.x = 0.5;
+    }
+    else if (player.velocity.dx < 0) {
+        player.sprite.scale.x = -0.5;
+    }
+    // pause is no movement
+    if (player.sprite !== null) {
+        if (player.velocity.dx === 0 && player.velocity.dy === 0) {
+            player.sprite.stop();
+        } else {
+            player.sprite.play();
+        }
+    }
 
     player.move();
     player.draw();
@@ -117,8 +214,8 @@ function checkEdges() {
     }
 }
 
-function checkWalls() {
-    for (let wall of walls) {
-
-    }
-}
+// function checkWalls() {
+//     for (let wall of walls) {
+//
+//     }
+// }
