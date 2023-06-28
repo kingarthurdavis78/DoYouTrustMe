@@ -3,12 +3,54 @@ import {Player} from './player.js';
 import {Wall} from './wall.js';
 import {rightPressed, leftPressed, upPressed, downPressed, spacePressed, app, stage, width, height} from './input.js';
 import {darkGray} from "./colors.js";
+import {Map} from './map.js';
 
 // Initialize the players
-let player = new Player("Adam", 0x66CCFF, 1, height * 0.05, height * 0.05, height * 0.01);
+let player = new Player(0x66CCFF, 1, height * 0.05, height * 0.05, height * 0.01);
 player.setPosition(width * 0.25, height * 0.9);
-let otherPlayer = new Player("Eve", 0xFF0000, 2, height * 0.05, height * 0.05, height * 0.01);
+let otherPlayer = new Player(0xFF0000, 2, height * 0.05, height * 0.05, height * 0.01);
 otherPlayer.setPosition(width * 0.75, height * 0.9);
+
+// Create map
+let map = new Map(width, height);
+
+
+// ws is the webSocket connection
+const ws = new WebSocket('ws://192.168.86.22:3000');
+ws.onmessage = async (event) => {
+    if (event.data === 'You are player 1') {
+        player.name = 'Adam';
+        otherPlayer.name = 'Eve';
+        loadPlayers(player, otherPlayer);
+        map.loadMap("maps/map.json", player.speed, 1).then(r => map.drawMap(stage));
+        return;
+    }
+    if (event.data === 'You are player 2') {
+        player.name = 'Eve';
+        otherPlayer.name = 'Adam';
+        loadPlayers(otherPlayer, player);
+        map.loadMap("maps/map.json", player.speed, 2).then(r => map.drawMap(stage));
+        return;
+    }
+    if (event.data === 'Sorry, the server is full') {
+        alert('Sorry, the server is full');
+        ws.close();
+        return;
+        }
+    if (event.data === 'Sorry, the other player disconnected') {
+        alert('Sorry, the other player disconnected');
+        otherPlayer.rect.visible = false;
+        return;
+    }
+    let message = JSON.parse(await event.data.text());
+    otherPlayer.setPosition(message.x + width * 0.5, message.y);
+    otherPlayer.setVelocity(message.dx, message.dy);
+};
+
+
+
+
+
 
 // Load gif and add it to the stage
 const adam_walking_images = [
@@ -33,45 +75,47 @@ const eve_walking_images = [
     "assets/eve/eve-walking-8.png",
 ];
 
-// Load Adam's walking animation
-for (let i = 0; i < adam_walking_images.length; i++) {
-    app.loader.add(adam_walking_images[i]);
-}
-
-// Load Eve's walking animation
-for (let i = 0; i < eve_walking_images.length; i++) {
-    app.loader.add(eve_walking_images[i]);
-}
-
-app.loader.load((loader, resources) => {
-    let textureArray = [];
+function loadPlayers(adam, eve) {
+    // Load Adam's walking animation
     for (let i = 0; i < adam_walking_images.length; i++) {
-        let texture = resources[adam_walking_images[i]].texture;
-        textureArray.push(texture);
+        app.loader.add(adam_walking_images[i]);
     }
-    player.sprite = new PIXI.AnimatedSprite(textureArray);
-    player.sprite.anchor.set(0.5);
-    player.sprite.scale.set(0.5);
-    player.sprite.animationSpeed = 0.15;
-    player.sprite.play();
-    player.sprite.x = player.position.x;
-    player.sprite.y = player.position.y;
-    stage.addChild(player.sprite);
-
-    textureArray = [];
+    // Load Eve's walking animation
     for (let i = 0; i < eve_walking_images.length; i++) {
-        let texture = resources[eve_walking_images[i]].texture;
-        textureArray.push(texture);
+        app.loader.add(eve_walking_images[i]);
     }
-    otherPlayer.sprite = new PIXI.AnimatedSprite(textureArray);
-    otherPlayer.sprite.anchor.set(0.5);
-    otherPlayer.sprite.scale.set(0.5);
-    otherPlayer.sprite.animationSpeed = 0.15;
-    otherPlayer.sprite.play();
-    otherPlayer.sprite.x = otherPlayer.position.x;
-    otherPlayer.sprite.y = otherPlayer.position.y;
-    stage.addChild(otherPlayer.sprite);
-});
+    app.loader.load((loader, resources) => {
+        // Load Adam's walking animation
+        let textureArray = [];
+        for (let i = 0; i < adam_walking_images.length; i++) {
+            let texture = resources[adam_walking_images[i]].texture;
+            textureArray.push(texture);
+        }
+        adam.sprite = new PIXI.AnimatedSprite(textureArray);
+        adam.sprite.anchor.set(0.5);
+        adam.sprite.scale.set(0.5);
+        adam.sprite.animationSpeed = 0.15;
+        adam.sprite.play();
+        adam.sprite.x = adam.position.x;
+        adam.sprite.y = adam.position.y;
+        stage.addChild(adam.sprite);
+
+        // Load Eve's walking animation
+        textureArray = [];
+        for (let i = 0; i < eve_walking_images.length; i++) {
+            let texture = resources[eve_walking_images[i]].texture;
+            textureArray.push(texture);
+        }
+        eve.sprite = new PIXI.AnimatedSprite(textureArray);
+        eve.sprite.anchor.set(0.5);
+        eve.sprite.scale.set(0.5);
+        eve.sprite.animationSpeed = 0.15;
+        eve.sprite.play();
+        eve.sprite.x = eve.position.x;
+        eve.sprite.y = eve.position.y;
+        stage.addChild(eve.sprite);
+    });
+}
 
 
 // Add the rectangles to the stage
@@ -83,37 +127,10 @@ let middle = new Wall(width / 2 - width * 0.005, 0, width * 0.01, height, darkGr
 stage.addChild(middle.rect);
 middle.draw();
 
-// load json map
-let map = loadMap("maps/map.json");
-
-async function loadMap(filename) {
-    // load text from file
-    let text = await fetch(filename);
-    // parse text to json
-    let map = await JSON.parse(await text.text());
-
-    console.log(map);
-    return map;
-}
 
 
-// ws is the webSocket connection
-const ws = new WebSocket('ws://192.168.253.163:3000');
-ws.onmessage = async (event) => {
-    if (event.data === 'Sorry, the server is full') {
-        alert('Sorry, the server is full');
-        ws.close();
-        return;
-        }
-    if (event.data === 'Sorry, the other player disconnected') {
-        alert('Sorry, the other player disconnected');
-        otherPlayer.rect.visible = false;
-        return;
-    }
-    let message = JSON.parse(await event.data.text());
-    otherPlayer.setPosition(message.x + width * 0.5, message.y);
-    otherPlayer.setVelocity(message.dx, message.dy);
-};
+
+
 
 // Main game loop
 app.ticker.maxFPS = 30;
@@ -176,7 +193,8 @@ function updatePlayer() {
     }
 
     // check if touching the edge of the screen
-    checkEdges();
+    player.checkBounds(width, height);
+    player.checkWalls(map.player1map);
 
     // flip the sprite if needed
     if (player.velocity.dx > 0) {
@@ -201,24 +219,5 @@ function updatePlayer() {
     // send the player data to the server
     if ((player.velocity.dx !== prevVelocity.dx || player.velocity.dy !== prevVelocity.dy) && ws.readyState === 1) {
         ws.send(JSON.stringify({x: player.position.x, y: player.position.y, dx: player.velocity.dx, dy: player.velocity.dy}));
-    }
-}
-
-function checkEdges() {
-    if (player.position.x + player.velocity.dx < 0) {
-        player.position.x = 0;
-        player.velocity.dx = 0;
-    }
-    if (player.position.x + player.velocity.dx + player.width > width * 0.5) {
-        player.position.x = width * 0.5 - player.width;
-        player.velocity.dx = 0;
-    }
-    if (player.position.y + player.velocity.dy < 0) {
-        player.position.y = 0;
-        player.velocity.dy = 0;
-    }
-    if (player.position.y + player.velocity.dy + player.height > height) {
-        player.position.y = height - player.height;
-        player.velocity.dy = 0;
     }
 }

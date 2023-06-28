@@ -18,7 +18,7 @@ let rects = [];
 // clicked on rect
 let clickedRect = null;
 
-let selectedColor = colors.red;
+let selectedColor = colors.darkGray;
 let colorRect = new PIXI.Graphics();
 stage.addChild(colorRect);
 colorRect.beginFill(selectedColor);
@@ -123,7 +123,7 @@ function saveMap() {
 
     // add walls to map
     for (let rect of rects) {
-        let wall = {x: rect.position.x, y: rect.position.y, w: rect.width, h: rect.height, color: rect.color};
+        let wall = {x: Math.floor(rect.position.x), y: Math.floor(rect.position.y), w: Math.floor(rect.width), h: Math.floor(rect.height), color: rect.color};
         if (rect.position.x < width / 2) {
             map.player1map.push(wall);
         }
